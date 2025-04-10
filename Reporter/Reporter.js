@@ -33,7 +33,7 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.9'; //version number set here
+    const version = '1.1.10'; //version number set here
     log('-=> Reporter v' + version + ' is loaded. Internal commands of !RPping, !RPpage-mod, !RPechochat, and !RPchangelayer are used in code.');
     //sendChat('Reporter', '/w gm Ready');
 
