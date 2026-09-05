@@ -1107,6 +1107,24 @@ td, th {
     }
   });
 
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const TOUCH_MARKER = '​';
+
+  const setHandoutFieldSafe = (handout, field, value) => {
+    handout.set(field, value);
+    if (field !== 'gmnotes') return Promise.resolve();
+    return getHandoutField(handout, 'notes').then(currentNotes => {
+      const marked = currentNotes + TOUCH_MARKER;
+      handout.set('notes', marked);
+      return delay(150)
+        .then(() => getHandoutField(handout, 'notes'))
+        .then(stillMarked => {
+          if (stillMarked === marked) handout.set('notes', currentNotes);
+        });
+    });
+  };
+
   const computeStyledContent = (rawContent, rawStyleCss) => {
     const cleanHtml = Cleaner.clean(rawContent);
     const styleRules = rawStyleCss ? CssParser.parse(HtmlUtil.htmlToPlainText(rawStyleCss)) : null;
@@ -1548,15 +1566,18 @@ td, th {
     const targetHandout = getObj('handout', ui.selectedHandoutId);
     if (!targetHandout) return renderPanelForPlayer(playerid);
     const styles = HandoutUtils.getAllStyleHandouts();
+    const field = ui.selectedField;
+    const styleName = ui.selectedStyleName;
 
-    return computeCleanAndStyled(ui, targetHandout, styles).then(({ styledHtml }) => {
-      targetHandout.set(ui.selectedField, styledHtml);
-      if (ui.selectedStyleName && ui.selectedStyleName !== 'none') {
-        HandoutUtils.setBindingTag(targetHandout, ui.selectedField, ui.selectedStyleName);
+    return computeCleanAndStyled(ui, targetHandout, styles).then(({ styledHtml }) =>
+      setHandoutFieldSafe(targetHandout, field, styledHtml)
+    ).then(() => {
+      if (styleName && styleName !== 'none') {
+        HandoutUtils.setBindingTag(targetHandout, field, styleName);
       } else {
-        HandoutUtils.clearBindingTag(targetHandout, ui.selectedField);
+        HandoutUtils.clearBindingTag(targetHandout, field);
       }
-      Logger.log(`Applied style "${ui.selectedStyleName || '(none)'}" to "${targetHandout.get('name')}" [${ui.selectedField}]`);
+      Logger.log(`Applied style "${styleName || '(none)'}" to "${targetHandout.get('name')}" [${field}]`);
       return renderPanelForPlayer(playerid);
     });
   };
@@ -1566,12 +1587,16 @@ td, th {
     if (!ui.selectedHandoutId) return renderPanelForPlayer(playerid);
     const targetHandout = getObj('handout', ui.selectedHandoutId);
     if (!targetHandout) return renderPanelForPlayer(playerid);
+    // See applyStyleToHandout's own comment on this snapshot -- same
+    // reasoning, same real delay possible underneath setHandoutFieldSafe.
+    const field = ui.selectedField;
 
-    return getHandoutField(targetHandout, ui.selectedField).then(rawContent => {
+    return getHandoutField(targetHandout, field).then(rawContent => {
       const cleanHtml = Cleaner.clean(rawContent);
-      targetHandout.set(ui.selectedField, cleanHtml);
-      HandoutUtils.clearBindingTag(targetHandout, ui.selectedField);
-      Logger.log(`Removed styling from "${targetHandout.get('name')}" [${ui.selectedField}]`);
+      return setHandoutFieldSafe(targetHandout, field, cleanHtml);
+    }).then(() => {
+      HandoutUtils.clearBindingTag(targetHandout, field);
+      Logger.log(`Removed styling from "${targetHandout.get('name')}" [${field}]`);
       return renderPanelForPlayer(playerid);
     });
   };
@@ -1582,11 +1607,15 @@ td, th {
     if (!ui.selectedHandoutId) return renderPanelForPlayer(playerid);
     const targetHandout = getObj('handout', ui.selectedHandoutId);
     if (!targetHandout) return renderPanelForPlayer(playerid);
+    // See applyStyleToHandout's own comment on this snapshot -- same
+    // reasoning, same real delay possible underneath setHandoutFieldSafe.
+    const field = ui.selectedField;
 
-    return getHandoutField(targetHandout, ui.selectedField).then(rawContent => {
+    return getHandoutField(targetHandout, field).then(rawContent => {
       const sanitized = Cleaner.stripSpanTags(rawContent);
-      targetHandout.set(ui.selectedField, sanitized);
-      Logger.log(`Sanitized <span> tags from "${targetHandout.get('name')}" [${ui.selectedField}]`);
+      return setHandoutFieldSafe(targetHandout, field, sanitized);
+    }).then(() => {
+      Logger.log(`Sanitized <span> tags from "${targetHandout.get('name')}" [${field}]`);
       return renderPanelForPlayer(playerid);
     });
   };
@@ -1602,7 +1631,7 @@ td, th {
       getHandoutField(styleHandout, 'notes')
     ]).then(([rawContent, rawStyleCss]) => {
       const { styledHtml } = computeStyledContent(rawContent, rawStyleCss);
-      handout.set(binding.field, styledHtml);
+      return setHandoutFieldSafe(handout, binding.field, styledHtml);
     });
   };
 
@@ -1630,8 +1659,11 @@ td, th {
       `<p>${HtmlUtil.escapeHtml(PROGRAM_NAME)} takes the plain text you've already written in a ` +
       `handout's Notes or GM Notes and dresses it up to look like a real prop from your game world ` +
       `&mdash; an old letter, a wanted poster, a torn journal page, whatever fits the scene. You can ` +
-      `also use it the other way around: pick one look and apply it across every handout in your game, ` +
-      `so everything matches your game system's theme instead of looking like plain, unstyled text. ` +
+      `also use it the other way around: pick one look and apply it handout by handout across your ` +
+      `game, so everything matches your game system's theme instead of looking like plain, unstyled ` +
+      `text &mdash; the style picker remembers your last choice as you switch handouts, so you're not ` +
+      `re-selecting it each time.</p>` +
+      `<p>` +
       `Your original writing is never lost or overwritten &mdash; the styling sits on top of it, and can ` +
       `be swapped or removed again at any time.</p>` +
 
