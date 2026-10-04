@@ -7,7 +7,7 @@ var Locksmith = Locksmith || (function() {
 
     var VERSION = '1.0.1';
     //Changelog
-    // 1.0.1 Added "Pick." token action (Add Pick. button, !lock --pick-action)
+    // 1.0.1 Added "Pick." token action (Add Pick. Token Action button, !lock --pick-action)
     // 1.0.0 Debut
     var SCRIPT_NAME = 'Locksmith';
 
@@ -80,7 +80,7 @@ var Locksmith = Locksmith || (function() {
 ` + clear + `
 
 <h3>Pick. Token Action</h3>
-<p>The <strong>Add Pick.</strong> button on the menu (or <code>!lock --pick-action</code>) adds a <strong>Pick.</strong> token action to the character of every selected token. Clicking it runs that character's own Thieves' Tools entry from their sheet, so the sheet handles proficiency and advantage, and Locksmith resolves the result like any other Thieves' Tools check. It works with both sheets, and it saves anyone from having to build a macro. The character needs Thieves' Tools in their sheet's tool proficiency list; a character who only carries the tools gets no action.</p>
+<p>The <strong>Add Pick. Token Action</strong> button on the menu (or <code>!lock --pick-action</code>) adds a <strong>Pick.</strong> token action to the character of every selected token. Clicking it runs that character's own Thieves' Tools entry from their sheet, so the sheet handles proficiency and advantage, and Locksmith resolves the result like any other Thieves' Tools check. It works with both sheets, and it saves anyone from having to build a macro. The character needs Thieves' Tools in their sheet's tool proficiency list; a character who only carries the tools gets no action.</p>
 <p>If a character's Thieves' Tools proficiency is deleted and added again, run the button again to refresh the action. Players can do the same for their own token by selecting it and running <code>!lock --pick-action</code>.</p>
 
 <h3>How locks are stored</h3>
@@ -1489,12 +1489,12 @@ var Locksmith = Locksmith || (function() {
 
             var tokenButtons =
                 '<a href="!lock --pick-action" title="Adds a Pick. token action to the selected tokens\' characters" ' +
-                CSS.buttonNeutralInline + '>Add Pick.</a>';
+                CSS.buttonNeutralInline + '>Add Pick. Token Action</a>';
 
             var menuTable = '<table ' + CSS.menuTable + '>' +
                 '<tr><td ' + CSS.menuGroupLabel + '>Selected</td><td ' + CSS.menuGroupCell + '>' + selectedButtons + '</td></tr>' +
                 '<tr><td ' + CSS.menuGroupLabel + '>Set</td><td ' + CSS.menuGroupCell + '>' + setButtons + '</td></tr>' +
-                '<tr><td ' + CSS.menuGroupLabel + '>Tokens</td><td ' + CSS.menuGroupCell + '>' + tokenButtons + '</td></tr>' +
+                '<tr><td ' + CSS.menuGroupLabel + '>Characters</td><td ' + CSS.menuGroupCell + '>' + tokenButtons + '</td></tr>' +
                 '</table>';
 
             var fullWidthButton = '<a href="!lock --toggle-dc-labels" ' + CSS.buttonNeutral + '>Show/Hide All Lock DCs</a>';
